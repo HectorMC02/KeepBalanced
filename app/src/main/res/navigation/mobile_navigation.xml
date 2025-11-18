@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.keepbalanced.ui.home.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/navigation_monthly"
+        android:name="com.example.keepbalanced.ui.monthly.MonthlyFragment"
+        android:label="Mensual"
+        tools:layout="@layout/fragment_monthly" />
+
+    <fragment
+        android:id="@+id/navigation_yearly"
+        android:name="com.example.keepbalanced.ui.yearly.YearlyFragment"
+        android:label="Anual"
+        tools:layout="@layout/fragment_yearly" />
+
+    <fragment
+        android:id="@+id/navigation_investment"
+        android:name="com.example.keepbalanced.ui.investment.InvestmentFragment"
+        android:label="Inversión"
+        tools:layout="@layout/fragment_investment" />
+</navigation>

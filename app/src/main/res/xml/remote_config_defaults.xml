@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>categorias_json</key>
+
+        <value>
+            {
+            "categorias": [
+            {
+            "nombre": "Supermercado",
+            "subcategorias": ["Mercadona", "Lidl", "Carrefour", "Otros"]
+            },
+            {
+            "nombre": "Alquiler",
+            "subcategorias": ["Casa", "Garaje", "Gastos"]
+            },
+            {
+            "nombre": "Coche",
+            "subcategorias": ["Gasolina", "Seguro", "Mantenimiento", "Impuestos"]
+            },
+            {
+            "nombre": "Entretenimiento",
+            "subcategorias": ["Cine", "Restaurantes", "Suscripciones", "Otros"]
+            },
+            {
+            "nombre": "Inversión",
+            "subcategorias": ["Renta Fija", "Renta Variable", "Oro", "Otros"]
+            },
+            {
+            "nombre": "Ingreso",
+            "subcategorias": ["Nómina", "Extras", "Regalos"]
+            }
+            ]
+            }
+        </value>
+    </entry>
+</defaultsMap>

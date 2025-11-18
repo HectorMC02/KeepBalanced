@@ -1,0 +1,46 @@
+# Ficheros de compilación (Gradle)
+.gradle/
+build/
+
+# Ficheros específicos de configuración local (Nunca subir esto)
+local.properties
+
+# Ficheros del IDE (Android Studio / IntelliJ)
+.idea/
+.navigation/
+*.iml
+*.ipr
+*.iws
+.settings/
+.classpath
+.project
+
+# Ficheros generados por el sistema operativo
+.DS_Store
+Thumbs.db
+
+# Android
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Firebase / Google Services
+# IMPORTANTE: Por seguridad, se recomienda no subir este archivo si el repo es público.
+# Si el repo es privado y solo lo usas tú, puedes poner una almohadilla # delante para subirlo.
+google-services.json
+
+# Keystore (Claves de firma de la app - NUNCA SUBIR)
+*.jks
+*.keystore
+*.pem
+*.p12
+
+# Google Play Store keys
+play-store-keys.json
+
+# Kotlin
+.kotlin/
+
+# Injection
+app/generated/
