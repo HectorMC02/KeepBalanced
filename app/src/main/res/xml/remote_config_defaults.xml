@@ -5,30 +5,118 @@
 
         <value>
             {
-            "categorias": [
-            {
-            "nombre": "Supermercado",
-            "subcategorias": ["Mercadona", "Lidl", "Carrefour", "Otros"]
-            },
+            "gastos": [
             {
             "nombre": "Alquiler",
-            "subcategorias": ["Casa", "Garaje", "Gastos"]
+            "subcategorias": [
+            "Casa",
+            "Limpieza"
+            ]
             },
             {
             "nombre": "Coche",
-            "subcategorias": ["Gasolina", "Seguro", "Mantenimiento", "Impuestos"]
+            "subcategorias": [
+            "Gasolina",
+            "Mantenimiento"
+            ]
+            },
+            {
+            "nombre": "Comida",
+            "subcategorias": [
+            "Supermercado",
+            "Restaurantes",
+            "Comida a domicilio"
+            ]
+            },
+            {
+            "nombre": "Compras",
+            "subcategorias": [
+            "Ropa",
+            "Regalos",
+            "Otros"
+            ]
+            },
+            {
+            "nombre": "Compra-Venta",
+            "subcategorias": [
+            "Wallapop",
+            "Vinted",
+            "Otros"
+            ]
             },
             {
             "nombre": "Entretenimiento",
-            "subcategorias": ["Cine", "Restaurantes", "Suscripciones", "Otros"]
+            "subcategorias": [
+            "Cine",
+            "Suscripciones",
+            "Bar/Cafetería",
+            "Otros"
+            ]
             },
             {
             "nombre": "Inversión",
-            "subcategorias": ["Renta Fija", "Renta Variable", "Oro", "Otros"]
+            "subcategorias": [
+            "Renta Fija",
+            "Renta Variable",
+            "Oro"
+            ]
             },
             {
-            "nombre": "Ingreso",
-            "subcategorias": ["Nómina", "Extras", "Regalos"]
+            "nombre": "Salud",
+            "subcategorias": [
+            "Psicóloga",
+            "Farmacia",
+            "Gimnasio",
+            "Suplementación"
+            ]
+            },
+            {
+            "nombre": "Transporte",
+            "subcategorias": [
+            "Bus",
+            "Taxis",
+            "Coche ajeno",
+            "Otros"
+            ]
+            },
+            {
+            "nombre": "Viajes",
+            "subcategorias": [
+            "Vuelo",
+            "Bus",
+            "Comida",
+            "Restaurantes",
+            "Regalos"
+            ]
+            }
+            ],
+            "ingresos": [
+            {
+            "nombre": "Blablacar",
+            "subcategorias": []
+            },
+            {
+            "nombre": "Compra-Venta",
+            "subcategorias": [
+            "Wallapop",
+            "Vinted",
+            "Otros"
+            ]
+            },
+            {
+            "nombre": "Salario",
+            "subcategorias": [
+            "Nómina",
+            "Paga extra"
+            ]
+            },
+            {
+            "nombre": "Transferencia",
+            "subcategorias": [
+            "Mamá",
+            "Regalos",
+            "Otros"
+            ]
             }
             ]
             }

@@ -8,6 +8,10 @@ android {
     namespace = "com.example.keepbalanced"
     compileSdk = 36
 
+    buildFeatures {
+        viewBinding = true
+    }
+
     defaultConfig {
         applicationId = "com.example.keepbalanced"
         minSdk = 26
@@ -39,6 +43,8 @@ android {
 
 
 dependencies {
+
+    implementation(libs.mpandroidchart)
 
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
     // --- Firebase ---

@@ -13,8 +13,8 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import com.example.keepbalanced.R
 import com.example.keepbalanced.model.Category
+import com.example.keepbalanced.model.CategoryConfig
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-// --- Imports nuevos ---
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -35,24 +35,24 @@ class AddTransactionDialog : BottomSheetDialogFragment() {
     private lateinit var actSubcategoria: AutoCompleteTextView
     private lateinit var btnGuardar: Button
     private lateinit var progressBar: ProgressBar
-
-    // --- Vistas nuevas para la fecha ---
     private lateinit var tilFecha: TextInputLayout
     private lateinit var etFecha: TextInputEditText
 
-    // --- Variables para manejar la fecha ---
-    private var selectedDate: Date = Date() // Por defecto, hoy
+    // Variables
+    private var selectedDate: Date = Date()
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
+    // Guardamos la configuración completa aquí
+    private var configActual: CategoryConfig? = null
 
-    private var listaCategorias: List<Category> = emptyList()
+    // La lista que se está mostrando actualmente
+    private var listaCategoriasActual: List<Category> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Solo inflamos la vista
         return inflater.inflate(R.layout.dialog_add_transaction, container, false)
     }
 
@@ -61,7 +61,7 @@ class AddTransactionDialog : BottomSheetDialogFragment() {
 
         viewModel = ViewModelProvider(this).get(AddTransactionViewModel::class.java)
 
-        // Enlazamos las vistas
+        // Enlazar vistas
         tilMonto = view.findViewById(R.id.til_monto)
         etMonto = view.findViewById(R.id.et_monto)
         actTipo = view.findViewById(R.id.act_tipo)
@@ -70,66 +70,46 @@ class AddTransactionDialog : BottomSheetDialogFragment() {
         actSubcategoria = view.findViewById(R.id.act_subcategoria)
         btnGuardar = view.findViewById(R.id.btn_guardar)
         progressBar = view.findViewById(R.id.progress_bar_dialog)
-
-        // --- Enlazamos la nueva vista de fecha ---
         tilFecha = view.findViewById(R.id.til_fecha)
         etFecha = view.findViewById(R.id.et_fecha)
 
-        // Ejecutamos la configuración
         setupSpinners()
-        setupDatePicker() // <-- Llamamos al nuevo método
+        setupDatePicker()
         setupObservers()
         setupListeners()
     }
 
     private fun setupSpinners() {
+        // Configuramos el selector de Tipo (Gasto / Ingreso)
         val tipos = listOf("Gasto", "Ingreso")
         val tipoAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, tipos)
         actTipo.setAdapter(tipoAdapter)
-        actTipo.setText("Gasto", false)
+        actTipo.setText("Gasto", false) // Por defecto Gasto
     }
 
-    /**
-     * Nuevo método para configurar el selector de fecha
-     */
     private fun setupDatePicker() {
-        // 1. Poner la fecha de hoy por defecto en el campo de texto
         etFecha.setText(dateFormat.format(selectedDate))
-
-        // 2. Poner listeners para abrir el diálogo de calendario
-        etFecha.setOnClickListener { showDatePicker() }
-        tilFecha.setEndIconOnClickListener { showDatePicker() }
-    }
-
-    /**
-     * Nuevo método que crea y muestra el MaterialDatePicker
-     */
-    private fun showDatePicker() {
-        val builder = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("Seleccionar Fecha")
-            .setSelection(selectedDate.time) // Selecciona la fecha actual por defecto
-
-        val datePicker = builder.build()
-
-        // Listener para cuando el usuario pulsa "Aceptar"
-        datePicker.addOnPositiveButtonClickListener { timestamp ->
-            // El 'timestamp' está en UTC. Lo ajustamos a la zona local.
-            // (Nota: 'Date(timestamp)' suele manejar la zona local bien)
-            selectedDate = Date(timestamp)
-            etFecha.setText(dateFormat.format(selectedDate))
+        val showPicker = {
+            val builder = MaterialDatePicker.Builder.datePicker()
+                .setTitleText("Seleccionar Fecha")
+                .setSelection(selectedDate.time)
+            val datePicker = builder.build()
+            datePicker.addOnPositiveButtonClickListener { timestamp ->
+                selectedDate = Date(timestamp)
+                etFecha.setText(dateFormat.format(selectedDate))
+            }
+            datePicker.show(parentFragmentManager, "DATE_PICKER")
         }
-
-        datePicker.show(parentFragmentManager, "DATE_PICKER_TAG")
+        etFecha.setOnClickListener { showPicker() }
+        tilFecha.setEndIconOnClickListener { showPicker() }
     }
 
     private fun setupObservers() {
-        // ... (los observadores de categoryConfig, isLoading, errorMessage, dismissDialog
-        // siguen exactamente igual que antes) ...
+        // Cuando recibimos la configuración de Firebase
         viewModel.categoryConfig.observe(viewLifecycleOwner) { config ->
-            listaCategorias = config.categorias
-            val nombresCategorias = listaCategorias.map { it.nombre }
-            val categoriaAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, nombresCategorias)
-            actCategoria.setAdapter(categoriaAdapter)
+            configActual = config
+            // Cargamos la lista correspondiente a lo que esté seleccionado (Gasto o Ingreso)
+            cargarCategoriasSegunTipo()
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
@@ -138,28 +118,56 @@ class AddTransactionDialog : BottomSheetDialogFragment() {
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
-            if (error != null) {
-                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
-            }
+            if (error != null) Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
         }
 
         viewModel.dismissDialog.observe(viewLifecycleOwner) { shouldDismiss ->
-            if (shouldDismiss) {
-                dismiss()
-            }
+            if (shouldDismiss) dismiss()
         }
     }
 
     private fun setupListeners() {
+        // --- CAMBIO IMPORTANTE: Listener para el Tipo (Gasto/Ingreso) ---
+        actTipo.setOnItemClickListener { _, _, _, _ ->
+            // Si cambiamos de Gasto a Ingreso (o viceversa), recargamos las categorías
+            cargarCategoriasSegunTipo()
+        }
+
+        // Listener para la Categoría
         actCategoria.setOnItemClickListener { parent, _, position, _ ->
             val nombreCategoriaSeleccionada = parent.getItemAtPosition(position) as String
-            val categoria = listaCategorias.find { it.nombre == nombreCategoriaSeleccionada }
+            val categoria = listaCategoriasActual.find { it.nombre == nombreCategoriaSeleccionada }
             actualizarSubcategorias(categoria)
         }
 
-        btnGuardar.setOnClickListener {
-            validarYGuardar()
+        btnGuardar.setOnClickListener { validarYGuardar() }
+    }
+
+    /**
+     * Decide qué lista mostrar (Gastos o Ingresos) basándose en el selector de Tipo.
+     */
+    private fun cargarCategoriasSegunTipo() {
+        val config = configActual ?: return // Si aún no ha cargado, salimos
+        val tipoSeleccionado = actTipo.text.toString() // "Gasto" o "Ingreso"
+
+        // Elegimos la lista correcta
+        listaCategoriasActual = if (tipoSeleccionado == "Ingreso") {
+            config.ingresos
+        } else {
+            config.gastos
         }
+
+        // Actualizamos el desplegable de Categorías
+        val nombres = listaCategoriasActual.map { it.nombre }
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, nombres)
+        actCategoria.setAdapter(adapter)
+
+        // Limpiamos la selección actual porque ya no es válida
+        actCategoria.setText("", false)
+
+        // Ocultamos subcategorías al cambiar de tipo
+        tilSubcategoria.visibility = View.GONE
+        actSubcategoria.setText(null)
     }
 
     private fun actualizarSubcategorias(categoria: Category?) {
@@ -174,38 +182,27 @@ class AddTransactionDialog : BottomSheetDialogFragment() {
         }
     }
 
-    /**
-     * Valida los campos y llama al ViewModel para guardar.
-     */
     private fun validarYGuardar() {
         val tipo = actTipo.text.toString()
         val montoStr = etMonto.text.toString()
         val categoria = actCategoria.text.toString()
         val subcategoria = if (tilSubcategoria.isVisible) actSubcategoria.text.toString().takeIf { it.isNotEmpty() } else null
 
-        // La variable 'selectedDate' ya la tenemos guardada
-
-        // Validación
         if (montoStr.isEmpty()) {
-            tilMonto.error = "El monto es obligatorio"
+            tilMonto.error = "Monto obligatorio"
             return
         }
-
         val monto = montoStr.toDoubleOrNull()
         if (monto == null || monto <= 0) {
-            tilMonto.error = "Monto no válido"
+            tilMonto.error = "Monto inválido"
             return
         }
-
         if (categoria.isEmpty()) {
-            Toast.makeText(requireContext(), "Debes seleccionar una categoría", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Selecciona categoría", Toast.LENGTH_SHORT).show()
             return
         }
 
         tilMonto.error = null
-
-        // --- CAMBIO AQUÍ ---
-        // Pasamos la 'selectedDate' al ViewModel
         viewModel.saveTransaction(tipo, monto, categoria, subcategoria, selectedDate)
     }
 
