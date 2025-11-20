@@ -1,6 +1,4 @@
 package com.example.keepbalanced.model
-
-import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
 
 data class Transaction(
@@ -10,8 +8,6 @@ data class Transaction(
     val categoria: String = "",
     val subcategoria: String? = null,
 
-    // --- CAMBIO AQUÍ ---
-    // Quitamos @ServerTimestamp. Ahora la 'fecha' la proporcionará la app.
     val fecha: Date? = null,
 
     val mes: Int = 0,

@@ -104,7 +104,7 @@ class AddTransactionViewModel : ViewModel() {
             subcategoria = subcategoria,
             mes = mes,
             anio = anio,
-            fecha = fecha // <-- Pasamos la fecha seleccionada
+            fecha = fecha
         )
 
         db.collection("transacciones")
