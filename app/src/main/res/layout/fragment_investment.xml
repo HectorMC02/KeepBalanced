@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Capital Total Invertido"
+        android:text="@string/capital_total_invertido"
         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
         android:textColor="@android:color/darker_gray"
         app:layout_constraintStart_toStartOf="parent"
@@ -30,25 +30,67 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_investment_title" />
 
-    <com.google.android.material.card.MaterialCardView
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/line_chart_investment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:layout_marginBottom="16dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_total_invested"
+        app:layout_constraintBottom_toTopOf="@id/scroll_chips"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_total_invested">
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/line_chart_investment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="16dp" />
+    <HorizontalScrollView
+        android:id="@+id/scroll_chips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-    </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_filters"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="4dp"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_total"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/general"
+                android:checked="true"
+                android:textColor="@android:color/black"
+                app:chipBackgroundColor="@color/design_default_color_primary"/> <com.google.android.material.chip.Chip
+            android:id="@+id/chip_fija"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/renta_fija"
+            android:checked="true"/>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_variable"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/renta_variable"
+                android:checked="true"/>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_oro"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/oro"
+                android:checked="true"/>
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
 
     <ProgressBar
         android:id="@+id/progress_bar_investment"
