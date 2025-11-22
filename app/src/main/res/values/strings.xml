@@ -5,6 +5,10 @@
     <string name="renta_fija">Renta Fija</string>
     <string name="renta_variable">Renta Variable</string>
     <string name="oro">Oro</string>
-    <string name="_12_nov_2024">12 Nov 2024</string>
+    <string name="_12_nov">12 Nov</string>
     <string name="_10_000">10.000 €</string>
+    <string name="_1m">1M</string>
+    <string name="_6m">6M</string>
+    <string name="_1a">1A</string>
+    <string name="todo">Todo</string>
 </resources>

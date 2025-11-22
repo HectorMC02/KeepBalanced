@@ -18,11 +18,13 @@ import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Suppress("DEPRECATION")
@@ -32,9 +34,9 @@ class InvestmentFragment : Fragment() {
     private lateinit var tvTotalInvested: TextView
     private lateinit var lineChart: LineChart
     private lateinit var progressBar: ProgressBar
-    private lateinit var chipGroup: ChipGroup
+    private lateinit var chipGroupTime: ChipGroup
+    private lateinit var chipGroupCategories: ChipGroup
 
-    // Guardamos los datos en memoria para poder filtrar rápido
     private var currentData: InvestmentChartData? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -49,7 +51,8 @@ class InvestmentFragment : Fragment() {
         tvTotalInvested = view.findViewById(R.id.tv_total_invested)
         lineChart = view.findViewById(R.id.line_chart_investment)
         progressBar = view.findViewById(R.id.progress_bar_investment)
-        chipGroup = view.findViewById(R.id.chip_group_filters)
+        chipGroupTime = view.findViewById(R.id.chip_group_time)
+        chipGroupCategories = view.findViewById(R.id.chip_group_filters)
 
         setupLineChartStyle()
         setupChipListeners()
@@ -70,13 +73,13 @@ class InvestmentFragment : Fragment() {
         val colorTexto = getThemeColor(android.R.attr.textColorPrimary)
 
         lineChart.description.isEnabled = false
-        lineChart.legend.isEnabled = false // Usamos nuestros Chips personalizados
+        lineChart.legend.isEnabled = false
         lineChart.setTouchEnabled(true)
         lineChart.isDragEnabled = true
         lineChart.setScaleEnabled(true)
         lineChart.setPinchZoom(true)
 
-        // Márgenes para que no se corten los marcadores
+        // Esto daba margen al CONTENEDOR, pero no al Eje Y interno
         lineChart.extraTopOffset = 20f
 
         val xAxis = lineChart.xAxis
@@ -85,25 +88,49 @@ class InvestmentFragment : Fragment() {
         xAxis.textColor = colorTexto
         xAxis.granularity = 1f
 
+        xAxis.valueFormatter = object : ValueFormatter() {
+            private val dateFormat = SimpleDateFormat("MMM yy", Locale("es", "ES"))
+            override fun getFormattedValue(value: Float): String {
+                return dateFormat.format(Date(value.toLong()))
+            }
+        }
+        xAxis.setLabelCount(5, true)
+
         val axisLeft = lineChart.axisLeft
         axisLeft.textColor = colorTexto
         axisLeft.setDrawGridLines(true)
-        axisLeft.gridColor = "#20808080".toColorInt() // Rejilla muy sutil
+        axisLeft.gridColor = "#20808080".toColorInt()
         axisLeft.axisMinimum = 0f
+
+        // --- ¡¡ESTA ES LA SOLUCIÓN!! ---
+        // Le decimos que añada un 30% de espacio extra por encima del valor máximo.
+        // Así el punto más alto nunca tocará el borde y el marcador cabrá siempre.
+        axisLeft.spaceTop = 30f
+        // -------------------------------
 
         lineChart.axisRight.isEnabled = false
     }
 
     private fun setupChipListeners() {
-        // Cada vez que se pulse un chip, refrescamos el gráfico
-        val listener = View.OnClickListener {
+        // Listener para el gráfico (categorías)
+        val catListener = View.OnClickListener {
             if (currentData != null) actualizarGrafico(currentData!!)
         }
+        view?.findViewById<Chip>(R.id.chip_total)?.setOnClickListener(catListener)
+        view?.findViewById<Chip>(R.id.chip_fija)?.setOnClickListener(catListener)
+        view?.findViewById<Chip>(R.id.chip_variable)?.setOnClickListener(catListener)
+        view?.findViewById<Chip>(R.id.chip_oro)?.setOnClickListener(catListener)
 
-        view?.findViewById<Chip>(R.id.chip_total)?.setOnClickListener(listener)
-        view?.findViewById<Chip>(R.id.chip_fija)?.setOnClickListener(listener)
-        view?.findViewById<Chip>(R.id.chip_variable)?.setOnClickListener(listener)
-        view?.findViewById<Chip>(R.id.chip_oro)?.setOnClickListener(listener)
+        // Listener para el TIEMPO
+        chipGroupTime.setOnCheckedChangeListener { _, checkedId ->
+            val range = when (checkedId) {
+                R.id.chip_1m -> TimeRange.ONE_MONTH
+                R.id.chip_6m -> TimeRange.SIX_MONTHS
+                R.id.chip_1y -> TimeRange.ONE_YEAR
+                else -> TimeRange.ALL // chip_all o null
+            }
+            viewModel.filterDataByRange(range)
+        }
     }
 
     private fun setupObservers() {
@@ -114,11 +141,10 @@ class InvestmentFragment : Fragment() {
 
         viewModel.chartData.observe(viewLifecycleOwner) { data ->
             currentData = data
-            // Configurar el formateador de fecha (solo una vez)
-            lineChart.xAxis.valueFormatter = IndexAxisValueFormatter(data.dateLabels)
 
-            // Configurar el marcador flotante (MarkerView)
-            val marker = CustomMarkerView(requireContext(), R.layout.custom_marker_view, data.dateLabels)
+            // Configurar marcador flotante (ahora necesita convertir la fecha internamente)
+            // Nota: Para simplificar, el marcador leerá el timestamp X y lo formateará él mismo
+            val marker = CustomMarkerView(requireContext(), R.layout.custom_marker_view)
             marker.chartView = lineChart
             lineChart.marker = marker
 
@@ -132,34 +158,22 @@ class InvestmentFragment : Fragment() {
     private fun actualizarGrafico(data: InvestmentChartData) {
         val dataSets = ArrayList<ILineDataSet>()
 
-        // Comprobar qué chips están activos y añadir sus líneas
         val chipTotal = view?.findViewById<Chip>(R.id.chip_total)
         val chipFija = view?.findViewById<Chip>(R.id.chip_fija)
         val chipVariable = view?.findViewById<Chip>(R.id.chip_variable)
         val chipOro = view?.findViewById<Chip>(R.id.chip_oro)
 
-        // 1. GENERAL (Azul/Primario)
         if (chipTotal?.isChecked == true && data.entriesTotal.isNotEmpty()) {
-            val set = crearLineDataSet(data.entriesTotal, "General", "#2196F3".toColorInt(), true)
-            dataSets.add(set)
+            dataSets.add(crearLineDataSet(data.entriesTotal, "General", "#2196F3".toColorInt(), true))
         }
-
-        // 2. RENTA FIJA (Verde Azulado)
         if (chipFija?.isChecked == true && data.entriesRentaFija.isNotEmpty()) {
-            val set = crearLineDataSet(data.entriesRentaFija, "Renta Fija", "#009688".toColorInt(), false)
-            dataSets.add(set)
+            dataSets.add(crearLineDataSet(data.entriesRentaFija, "Renta Fija", "#009688".toColorInt(), false))
         }
-
-        // 3. RENTA VARIABLE (Rosa/Rojo)
         if (chipVariable?.isChecked == true && data.entriesRentaVariable.isNotEmpty()) {
-            val set = crearLineDataSet(data.entriesRentaVariable, "Renta Variable", "#E91E63".toColorInt(), false)
-            dataSets.add(set)
+            dataSets.add(crearLineDataSet(data.entriesRentaVariable, "Renta Variable", "#E91E63".toColorInt(), false))
         }
-
-        // 4. ORO (Amarillo/Dorado)
         if (chipOro?.isChecked == true && data.entriesOro.isNotEmpty()) {
-            val set = crearLineDataSet(data.entriesOro, "Oro", "#FFC107".toColorInt(), false)
-            dataSets.add(set)
+            dataSets.add(crearLineDataSet(data.entriesOro, "Oro", "#FFC107".toColorInt(), false))
         }
 
         if (dataSets.isEmpty()) {
@@ -167,37 +181,30 @@ class InvestmentFragment : Fragment() {
             return
         }
 
-        lineChart.highlightValues(null)
+        lineChart.highlightValues(null) // Prevenir crash
 
         val lineData = LineData(dataSets)
         lineChart.data = lineData
-
-        // Animación suave al cambiar filtros
         lineChart.animateX(500)
     }
 
     private fun crearLineDataSet(entries: List<Entry>, label: String, color: Int, isFilled: Boolean): LineDataSet {
         val set = LineDataSet(entries, label)
-
         set.color = color
         set.setCircleColor(color)
         set.lineWidth = 2.5f
         set.circleRadius = 3f
-        set.mode = LineDataSet.Mode.CUBIC_BEZIER // Curva suave
-
-        // --- LO QUE PEDISTE: SIN CRUCETA FEA ---
+        set.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
+        set.cubicIntensity = 0.1f
         set.setDrawHighlightIndicators(false)
 
-        set.setDrawValues(false) // Sin números sobre la línea (usamos el marcador)
-        set.setDrawCircles(false) // Ocultar puntos para que sea una línea limpia (se ven al tocar)
-
-        // Si es la general, le ponemos relleno para que destaque más
+        set.setDrawValues(false)
+        set.setDrawCircles(false)
         if (isFilled) {
             set.setDrawFilled(true)
             set.fillColor = color
             set.fillAlpha = 30
         }
-
         return set
     }
 }

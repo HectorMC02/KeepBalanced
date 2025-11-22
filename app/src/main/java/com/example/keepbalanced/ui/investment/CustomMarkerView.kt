@@ -12,71 +12,59 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.utils.MPPointF
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Suppress("DEPRECATION")
 @SuppressLint("ViewConstructor")
-class CustomMarkerView : MarkerView {
+class CustomMarkerView(context: Context, layoutResource: Int) : MarkerView(context, layoutResource) {
 
-    private val labels: List<String>
+    private val tvContent: TextView = findViewById(R.id.tv_marker_amount)
+    private val tvDate: TextView = findViewById(R.id.tv_marker_date)
+    private val dotView: View = findViewById(R.id.view_dot)
 
-    constructor(context: Context, layoutResource: Int, labels: List<String>) : super(
-        context,
-        layoutResource
-    ) {
-        this.labels = labels
-        this.tvContent = findViewById(R.id.tv_marker_amount)
-        this.tvDate = findViewById(R.id.tv_marker_date)
-        this.dotView = findViewById(R.id.view_dot)
-        this.format = NumberFormat.getCurrencyInstance(Locale("es", "ES"))
-    }
+    private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("es", "ES"))
+    private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("es", "ES"))
 
-    private val tvContent: TextView
-    private val tvDate: TextView
-    private val dotView: View   // El punto
-
-    private val format: NumberFormat
+    // Convertimos los 12dp del punto a píxeles reales
+    private val dotSizePixels = 12 * context.resources.displayMetrics.density
 
     override fun refreshContent(e: Entry?, highlight: Highlight?) {
         if (e == null || highlight == null) return
 
-        // 1. Poner el texto (Dinero y Fecha)
-        tvContent.text = format.format(e.y.toDouble())
-        val index = e.x.toInt()
-        if (index >= 0 && index < labels.size) {
-            tvDate.text = labels[index]
-        }
+        tvContent.text = currencyFormat.format(e.y.toDouble())
+        val date = Date(e.x.toLong())
+        tvDate.text = dateFormat.format(date)
 
-        // 2. CAMBIAR EL COLOR DEL PUNTO
-        // Obtenemos el gráfico para acceder a sus datos
         val chart = chartView as? LineChart
         if (chart != null) {
-            // Buscamos el conjunto de datos (la línea) que se ha tocado
             val dataSet = chart.data.getDataSetByIndex(highlight.dataSetIndex)
             if (dataSet != null) {
-                // Obtenemos el color de esa línea
-                val colorLinea = dataSet.color
-
-                // Teñimos nuestro punto de ese color
-                dotView.backgroundTintList = ColorStateList.valueOf(colorLinea)
+                dotView.backgroundTintList = ColorStateList.valueOf(dataSet.color)
             }
         }
-
         super.refreshContent(e, highlight)
     }
 
-    // 3. AJUSTAR POSICIÓN (CENTRADO EXACTO)
     override fun getOffset(): MPPointF {
-        // Queremos que el centro del PUNTO (que está abajo del all) coincida con el dedo.
-
-        // Centramos horizontalmente: -(mitad del ancho total)
+        // 1. Centrar horizontalmente
         val xOffset = -(width / 2).toFloat()
 
-        // Centramos verticalmente:
-        // Subimos toda la altura de la vista (-height)
-        // Pero bajamos la mitad de la altura del punto para que el centro del punto quede en la línea.
-        // El punto mide 12dp aprox, así que ajustamos la mitad.
-        val yOffset = -(height).toFloat() + (dotView.height / 2)
+        // 2. Posición Vertical
+        // El punto mide 12dp. Su centro matemático está a 6dp del fondo.
+        val dotRadius = dotSizePixels / 2
+
+        // --- CORRECCIÓN VISUAL ---
+        // Subimos el marcador unos píxeles extra (ej: 3dp) para compensar el efecto visual.
+        // Si sigue pareciendo bajo, aumenta este número (ej: a 4 o 5).
+        val visualAdjustment = 1 * context.resources.displayMetrics.density
+
+        // Fórmula:
+        // -height        -> Sube all el marcador para que su borde inferior toque la línea.
+        // +dotRadius     -> Baja hasta el centro del círculo.
+        // -visualAdjustment -> Lo sube un poquito para que quede "clavado" o ligeramente encima.
+        val yOffset = -(height.toFloat()) + dotRadius - visualAdjustment
 
         return MPPointF(xOffset, yOffset)
     }
