@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">KeepBalanced</string>
+    <string name="capital_total_invertido">Capital Total Invertido</string>
+    <string name="general">General</string>
+    <string name="renta_fija">Renta Fija</string>
+    <string name="renta_variable">Renta Variable</string>
+    <string name="oro">Oro</string>
+    <string name="_12_nov_2024">12 Nov 2024</string>
+    <string name="_10_000">10.000 €</string>
 </resources>
