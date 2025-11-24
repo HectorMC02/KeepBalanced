@@ -1,5 +1,8 @@
+@file:Suppress("SameParameterValue")
+
 package com.example.keepbalanced.ui.home
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.util.TypedValue
@@ -10,7 +13,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.toColorInt // <-- IMPORTANTE: Necesario para .toColorInt()
+import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -34,6 +37,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.NumberFormat
 import java.util.Locale
 
+@Suppress("DEPRECATION")
 class HomeFragment : Fragment() {
 
     private lateinit var homeViewModel: HomeViewModel
@@ -49,7 +53,6 @@ class HomeFragment : Fragment() {
     private lateinit var pieChartGastos: PieChart
     private lateinit var pieChartIngresos: PieChart
 
-    // Variable para la paginación
     private var limiteElementos = 5
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -216,6 +219,7 @@ class HomeFragment : Fragment() {
 
         val data = PieData(dataSet)
         data.setValueFormatter(object : ValueFormatter() {
+            @SuppressLint("DefaultLocale")
             override fun getFormattedValue(value: Float): String {
                 if (value < 1f) return ""
                 return String.format("%.1f %%", value)

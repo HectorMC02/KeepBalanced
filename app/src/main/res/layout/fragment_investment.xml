@@ -4,143 +4,203 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
     tools:context=".ui.investment.InvestmentFragment">
 
-    <TextView
-        android:id="@+id/tv_investment_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/capital_total_invertido"
-        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-        android:textColor="@android:color/darker_gray"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/tv_total_invested"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        tools:text="15.400,00 €"
-        android:textAppearance="@style/TextAppearance.Material3.DisplayLarge"
-        android:textStyle="bold"
-        android:textColor="@color/design_default_color_primary"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_investment_title" />
-
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chip_group_time"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:singleSelection="true"
-        app:selectionRequired="true"
-        app:layout_constraintTop_toBottomOf="@id/tv_total_invested"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        android:paddingBottom="32dp">
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_1m"
-            style="@style/Widget.Material3.Chip.Filter"
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/_1m" />
+            android:padding="16dp">
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_6m"
-            style="@style/Widget.Material3.Chip.Filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/_6m" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_1y"
-            style="@style/Widget.Material3.Chip.Filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/_1a" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_all"
-            style="@style/Widget.Material3.Chip.Filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/todo"
-            android:checked="true" />
-    </com.google.android.material.chip.ChipGroup>
-
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/line_chart_investment"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/chip_group_time"
-        app:layout_constraintBottom_toTopOf="@id/scroll_chips_categories"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <HorizontalScrollView
-        android:id="@+id/scroll_chips_categories"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_filters"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="4dp"
-            app:singleSelection="false">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_total"
-                style="@style/Widget.Material3.Chip.Filter"
+            <TextView
+                android:id="@+id/tv_investment_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/general"
-                android:checked="true"
-                app:chipBackgroundColor="@color/design_default_color_primary"/>
+                android:text="@string/capital_total_invertido"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:textColor="@android:color/darker_gray"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_fija"
-                style="@style/Widget.Material3.Chip.Filter"
+            <TextView
+                android:id="@+id/tv_total_invested"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/renta_fija"
-                android:checked="true"/>
+                android:layout_marginTop="8dp"
+                tools:text="15.400,00 €"
+                android:textAppearance="@style/TextAppearance.Material3.DisplayLarge"
+                android:textStyle="bold"
+                android:textColor="@color/design_default_color_primary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_investment_title" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_variable"
-                style="@style/Widget.Material3.Chip.Filter"
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                app:singleSelection="true"
+                app:selectionRequired="true"
+                app:layout_constraintTop_toBottomOf="@id/tv_total_invested"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_1m"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/_1m" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_6m"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/_6m" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_1y"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/_1a" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_all"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/todo"
+                    android:checked="true" />
+            </com.google.android.material.chip.ChipGroup>
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/line_chart_investment"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:layout_marginTop="16dp"
+                app:layout_constraintTop_toBottomOf="@id/chip_group_time"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_filters"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:singleSelection="false"
+                app:layout_constraintTop_toBottomOf="@id/line_chart_investment"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_total"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/general"
+                    android:checked="true"
+                    app:chipIcon="@drawable/ic_circle_filled"
+                    app:chipIconTint="@color/inv_general"
+                    app:chipIconVisible="true"
+                    app:iconStartPadding="1dp"
+                    app:iconEndPadding="2dp"
+                    android:tooltipText="General"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_fija"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/fija"
+                    android:checked="true"
+                    app:chipIcon="@drawable/ic_circle_filled"
+                    app:chipIconTint="@color/inv_fija"
+                    app:chipIconVisible="true"
+                    app:iconStartPadding="1dp"
+                    app:iconEndPadding="2dp"
+                    android:tooltipText="Renta Fija"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_variable"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/variable"
+                    android:checked="true"
+                    app:chipIcon="@drawable/ic_circle_filled"
+                    app:chipIconTint="@color/inv_variable"
+                    app:chipIconVisible="true"
+                    app:iconStartPadding="1dp"
+                    app:iconEndPadding="2dp"
+                    android:tooltipText="Renta Variable"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_oro"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/oro"
+                    android:checked="true"
+                    app:chipIcon="@drawable/ic_circle_filled"
+                    app:chipIconTint="@color/inv_oro"
+                    app:chipIconVisible="true"
+                    app:iconStartPadding="1dp"
+                    app:iconEndPadding="2dp"
+                    android:tooltipText="Oro"/>
+            </com.google.android.material.chip.ChipGroup>
+
+            <TextView
+                android:id="@+id/tv_portfolio_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/renta_variable"
-                android:checked="true"/>
+                android:layout_marginTop="24dp"
+                android:text="@string/distribuci_n_de_cartera"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                app:layout_constraintTop_toBottomOf="@id/chip_group_filters"
+                app:layout_constraintStart_toStartOf="parent"/>
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_oro"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/oro"
-                android:checked="true"/>
-        </com.google.android.material.chip.ChipGroup>
-    </HorizontalScrollView>
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:layout_marginTop="16dp"
+                app:layout_constraintTop_toBottomOf="@id/tv_portfolio_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pie_chart_portfolio"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="16dp" />
+
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pie_chart_target"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="38dp" />
+
+            </FrameLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 
     <ProgressBar
         android:id="@+id/progress_bar_investment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

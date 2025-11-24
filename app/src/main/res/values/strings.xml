@@ -11,4 +11,10 @@
     <string name="_6m">6M</string>
     <string name="_1a">1A</string>
     <string name="todo">Todo</string>
+    <string name="distribuci_n_de_cartera">Distribución de Cartera</string>
+    <string name="variable">Variable</string>
+    <string name="fija">Fija</string>
+    <string name="mes_siguiente">Mes siguiente</string>
+    <string name="noviembre_2025">Noviembre 2025</string>
+    <string name="mes_anterior">Mes anterior</string>
 </resources>
