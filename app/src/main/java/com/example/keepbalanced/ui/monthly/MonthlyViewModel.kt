@@ -7,6 +7,7 @@ import com.example.keepbalanced.model.Transaction
 import com.github.mikephil.charting.data.BarEntry
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -25,8 +26,20 @@ class MonthlyViewModel : ViewModel() {
     private val auth = Firebase.auth
     private val userId = auth.currentUser?.uid ?: ""
 
+    // Datos Gráfico Barras
     private val _chartData = MutableLiveData<MonthlyChartData>()
     val chartData: LiveData<MonthlyChartData> = _chartData
+
+    // Datos Gráfico Circular (Gastos del mes)
+    private val _monthlyExpensesMap = MutableLiveData<Map<String, Double>>()
+    val monthlyExpensesMap: LiveData<Map<String, Double>> = _monthlyExpensesMap
+
+    // Totales Numéricos
+    private val _monthlyIncome = MutableLiveData(0.0)
+    val monthlyIncome: LiveData<Double> = _monthlyIncome
+
+    private val _monthlyExpense = MutableLiveData(0.0)
+    val monthlyExpense: LiveData<Double> = _monthlyExpense
 
     private val _currentMonthText = MutableLiveData<String>()
     val currentMonthText: LiveData<String> = _currentMonthText
@@ -34,7 +47,6 @@ class MonthlyViewModel : ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    // Calendario interno para saber qué mes estamos viendo (empieza en Hoy)
     private var selectedDate = Calendar.getInstance()
 
     init {
@@ -56,13 +68,11 @@ class MonthlyViewModel : ViewModel() {
     private fun loadDataForSelectedMonth() {
         _isLoading.value = true
 
-        // 1. Formatear título (Ej: "Noviembre 2025")
         val fmt = SimpleDateFormat("MMMM yyyy", Locale("es", "ES"))
         val titulo = fmt.format(selectedDate.time)
         _currentMonthText.value = titulo.replaceFirstChar { it.uppercase() }
 
-        // 2. Filtros para Firebase
-        val monthIndex = selectedDate.get(Calendar.MONTH) + 1 // Enero es 1 en tu BD
+        val monthIndex = selectedDate.get(Calendar.MONTH) + 1
         val year = selectedDate.get(Calendar.YEAR)
         val daysInMonth = selectedDate.getActualMaximum(Calendar.DAY_OF_MONTH)
 
@@ -70,47 +80,63 @@ class MonthlyViewModel : ViewModel() {
             .whereEqualTo("usuarioId", userId)
             .whereEqualTo("anio", year)
             .whereEqualTo("mes", monthIndex)
+            .orderBy("fecha", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshots, _ ->
                 _isLoading.value = false
                 if (snapshots != null) {
                     val transactions = snapshots.toObjects(Transaction::class.java)
-                    processDataForChart(transactions, daysInMonth)
+
+                    processBarChartData(transactions, daysInMonth)
+                    processTotalsAndPie(transactions)
                 }
             }
     }
 
-    private fun processDataForChart(transactions: List<Transaction>, daysInMonth: Int) {
+    private fun processBarChartData(transactions: List<Transaction>, daysInMonth: Int) {
         val incomeEntries = ArrayList<BarEntry>()
         val expenseEntries = ArrayList<BarEntry>()
 
-        // Agrupamos las transacciones por el día del mes (1, 2, 3...)
         val grouped = transactions.groupBy {
             val cal = Calendar.getInstance()
-            if (it.fecha != null) {
-                cal.time = it.fecha
-                cal.get(Calendar.DAY_OF_MONTH)
-            } else {
-                -1
-            }
+            cal.time = it.fecha!!
+            cal.get(Calendar.DAY_OF_MONTH)
         }
 
-        // Recorremos TODOS los días del mes para rellenar huecos con 0
         for (day in 1..daysInMonth) {
             var dailyIncome = 0.0
             var dailyExpense = 0.0
 
             val dayTransactions = grouped[day] ?: emptyList()
-
             for (t in dayTransactions) {
                 if (t.tipo == "ingreso") dailyIncome += t.monto
                 else if (t.tipo == "gasto") dailyExpense += t.monto
             }
 
-            // Eje X = Día del mes
             incomeEntries.add(BarEntry(day.toFloat(), dailyIncome.toFloat()))
             expenseEntries.add(BarEntry(day.toFloat(), dailyExpense.toFloat()))
         }
 
         _chartData.value = MonthlyChartData(incomeEntries, expenseEntries, daysInMonth)
+    }
+
+    private fun processTotalsAndPie(transactions: List<Transaction>) {
+        var totalIng = 0.0
+        var totalGast = 0.0
+        val gastosMap = mutableMapOf<String, Double>()
+
+        for (t in transactions) {
+            if (t.tipo == "ingreso") {
+                totalIng += t.monto
+            } else if (t.tipo == "gasto") {
+                totalGast += t.monto
+                // Agrupar para el gráfico circular
+                val cat = t.categoria.ifEmpty { "Otros" }
+                gastosMap[cat] = gastosMap.getOrDefault(cat, 0.0) + t.monto
+            }
+        }
+
+        _monthlyIncome.value = totalIng
+        _monthlyExpense.value = totalGast
+        _monthlyExpensesMap.value = gastosMap
     }
 }

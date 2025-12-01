@@ -1,5 +1,6 @@
 package com.example.keepbalanced.ui.home
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.util.TypedValue
@@ -169,13 +170,13 @@ class HomeFragment : Fragment() {
 
     private fun setupObservers() {
         // Dashboard Observers
-        homeViewModel.balance.observe(viewLifecycleOwner) { balance ->
+        homeViewModel.balanceGlobal.observe(viewLifecycleOwner) { balance ->
             tvBalanceTotal.text = formatCurrency(balance)
             val colorRes = if (balance >= 0) android.R.color.holo_green_dark else android.R.color.holo_red_dark
             tvBalanceTotal.setTextColor(ContextCompat.getColor(requireContext(), colorRes))
         }
-        homeViewModel.totalIngresos.observe(viewLifecycleOwner) { tvIngresosTotal.text = formatCurrency(it) }
-        homeViewModel.totalGastos.observe(viewLifecycleOwner) { tvGastosTotal.text = formatCurrency(it) }
+        homeViewModel.ingresosMes.observe(viewLifecycleOwner) { tvIngresosTotal.text = formatCurrency(it) }
+        homeViewModel.gastosMes.observe(viewLifecycleOwner) { tvGastosTotal.text = formatCurrency(it) }
 
         homeViewModel.transaccionesMes.observe(viewLifecycleOwner) { transacciones ->
             adapterRecent.updateList(transacciones.take(3))
@@ -286,6 +287,7 @@ class HomeFragment : Fragment() {
 
         val data = PieData(dataSet)
         data.setValueFormatter(object : ValueFormatter() {
+            @SuppressLint("DefaultLocale")
             override fun getFormattedValue(value: Float): String {
                 if (value < 1f) return ""
                 return String.format("%.1f %%", value)

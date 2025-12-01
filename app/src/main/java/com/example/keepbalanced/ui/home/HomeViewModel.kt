@@ -17,16 +17,19 @@ class HomeViewModel : ViewModel() {
 
     private val db = Firebase.firestore
     private val auth = Firebase.auth
-
     private val userId = auth.currentUser?.uid ?: ""
 
     // --- DASHBOARD DATA ---
-    private val _totalIngresos = MutableLiveData(0.0)
-    val totalIngresos: LiveData<Double> = _totalIngresos
-    private val _totalGastos = MutableLiveData(0.0)
-    val totalGastos: LiveData<Double> = _totalGastos
-    private val _balance = MutableLiveData(0.0)
-    val balance: LiveData<Double> = _balance
+    // Balance GLOBAL (Histórico completo)
+    private val _balanceGlobal = MutableLiveData(0.0)
+    val balanceGlobal: LiveData<Double> = _balanceGlobal
+
+    // Datos del MES ACTUAL
+    private val _ingresosMes = MutableLiveData(0.0)
+    val ingresosMes: LiveData<Double> = _ingresosMes
+    private val _gastosMes = MutableLiveData(0.0)
+    val gastosMes: LiveData<Double> = _gastosMes
+
     private val _transaccionesMes = MutableLiveData<List<Transaction>>()
     val transaccionesMes: LiveData<List<Transaction>> = _transaccionesMes
     private val _gastosPorCategoria = MutableLiveData<Map<String, Double>>()
@@ -37,8 +40,6 @@ class HomeViewModel : ViewModel() {
     // --- HISTORIAL COMPLETO DATA ---
     private val _fullHistoryList = MutableLiveData<List<Transaction>>()
     val fullHistoryList: LiveData<List<Transaction>> = _fullHistoryList
-
-    // Variable para controlar si hemos llegado al final
     private val _isEndOfList = MutableLiveData<Boolean>()
     val isEndOfList: LiveData<Boolean> = _isEndOfList
 
@@ -55,11 +56,31 @@ class HomeViewModel : ViewModel() {
 
     init {
         if (userId.isNotEmpty()) {
-            cargarDatosDashboard()
+            cargarBalanceGlobal() // Nueva función
+            cargarDatosMesActual()
         }
     }
 
-    fun cargarDatosDashboard() {
+    // 1. CALCULAR BALANCE HISTÓRICO (Sin filtros de fecha)
+    private fun cargarBalanceGlobal() {
+        db.collection("transacciones")
+            .whereEqualTo("usuarioId", userId)
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) return@addSnapshotListener
+                if (snapshots != null) {
+                    val todas = snapshots.toObjects(Transaction::class.java)
+                    var total = 0.0
+                    for (t in todas) {
+                        if (t.tipo == "ingreso") total += t.monto
+                        else if (t.tipo == "gasto") total -= t.monto
+                    }
+                    _balanceGlobal.value = total
+                }
+            }
+    }
+
+    // 2. CALCULAR DATOS DEL MES (Para gráficos y resumen mensual)
+    fun cargarDatosMesActual() {
         _isLoading.value = true
         val calendario = Calendar.getInstance()
         val mesActual = calendario.get(Calendar.MONTH) + 1
@@ -79,13 +100,16 @@ class HomeViewModel : ViewModel() {
                 if (snapshots != null) {
                     val lista = snapshots.toObjects(Transaction::class.java)
                     _transaccionesMes.value = lista
-                    calcularTotales(lista)
+
+                    // Calculamos totales SOLO de este mes
+                    calcularTotalesMes(lista)
                     agruparPorCategoria(lista, "gasto", _gastosPorCategoria)
                     agruparPorCategoria(lista, "ingreso", _ingresosPorCategoria)
                 }
             }
     }
 
+    // ... (cargarHistorial sigue IGUAL) ...
     fun getCurrentFilter() = currentFilter
 
     fun cargarHistorial(reset: Boolean, newFilter: HistoryFilter? = null) {
@@ -98,7 +122,6 @@ class HomeViewModel : ViewModel() {
                 lastVisibleDocument = null
                 currentHistoryList.clear()
                 _fullHistoryList.value = emptyList()
-                // Al cambiar filtro, asumimos que hay datos (hasta que se demuestre lo contrario)
                 _isEndOfList.value = false
             }
         } else if (reset) {
@@ -120,7 +143,6 @@ class HomeViewModel : ViewModel() {
         if (currentFilter.dateFrom != null) query = query.whereGreaterThanOrEqualTo("fecha", currentFilter.dateFrom!!)
         if (currentFilter.dateTo != null) query = query.whereLessThanOrEqualTo("fecha", currentFilter.dateTo!!)
 
-        // Pedimos EXACTAMENTE el límite actual.
         query = query.limit(currentLimit)
 
         query.get().addOnSuccessListener { snapshots ->
@@ -131,15 +153,11 @@ class HomeViewModel : ViewModel() {
 
                 var lista = snapshots.toObjects(Transaction::class.java)
 
-                // Filtro local de importe
                 if (currentFilter.minAmount != null) lista = lista.filter { it.monto >= currentFilter.minAmount!! }
                 if (currentFilter.maxAmount != null) lista = lista.filter { it.monto <= currentFilter.maxAmount!! }
 
                 _fullHistoryList.value = lista
 
-                // --- LÓGICA FIN DE LISTA ---
-                // Si Firebase devuelve MENOS documentos de los que pedimos en el límite,
-                // significa que ya no hay más en la base de datos.
                 if (snapshots.size() < currentLimit) {
                     _isEndOfList.value = true
                 } else {
@@ -148,7 +166,6 @@ class HomeViewModel : ViewModel() {
 
             } else {
                 if (reset || newFilter != null) _fullHistoryList.value = emptyList()
-                // Si la consulta devuelve 0, obviamente es el final
                 _isEndOfList.value = true
             }
         }.addOnFailureListener { e ->
@@ -157,17 +174,17 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    // ... (resto de funciones auxiliares IGUALES) ...
-    private fun calcularTotales(transacciones: List<Transaction>) {
+    // Auxiliares
+    private fun calcularTotalesMes(transacciones: List<Transaction>) {
         var ingresos = 0.0
         var gastos = 0.0
         for (trans in transacciones) {
             if (trans.tipo == "ingreso") ingresos += trans.monto
             else if (trans.tipo == "gasto") gastos += trans.monto
         }
-        _totalIngresos.value = ingresos
-        _totalGastos.value = gastos
-        _balance.value = ingresos - gastos
+        _ingresosMes.value = ingresos
+        _gastosMes.value = gastos
+        // Nota: Ya no calculamos el balance aquí, viene de cargarBalanceGlobal()
     }
 
     private fun agruparPorCategoria(transacciones: List<Transaction>, tipo: String, liveData: MutableLiveData<Map<String, Double>>) {

@@ -20,9 +20,9 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/boton_previo"
             android:src="@android:drawable/ic_media_previous"
-            app:tint="@color/design_default_color_primary"
-            android:contentDescription="@string/mes_anterior"/>
+            app:tint="@color/design_default_color_primary" />
 
         <TextView
             android:id="@+id/tv_current_month"
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            tools:text="@string/noviembre_2025"
+            android:text="@string/noviembre_2025"
             android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
             android:textStyle="bold" />
 
@@ -39,20 +39,101 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/bot_n_siguiente"
             android:src="@android:drawable/ic_media_next"
-            app:tint="@color/design_default_color_primary"
-            android:contentDescription="@string/mes_siguiente"/>
+            app:tint="@color/design_default_color_primary" />
     </LinearLayout>
 
-    <com.github.mikephil.charting.charts.BarChart
-        android:id="@+id/bar_chart_monthly"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
+        android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/layout_month_selector"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ingresos_mensuales"
+                        android:textSize="12sp"/>
+                    <TextView
+                        android:id="@+id/tv_monthly_income"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/_0_00"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        android:textColor="@android:color/holo_green_dark"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/gastos_mensuales"
+                        android:textSize="12sp"/>
+                    <TextView
+                        android:id="@+id/tv_monthly_expense"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/_0_00"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        android:textColor="@android:color/holo_red_dark"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/evoluci_n_diaria"
+                android:paddingHorizontal="16dp"
+                android:textStyle="bold"/>
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/bar_chart_monthly"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:layout_margin="16dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/desglose_de_gastos"
+                android:paddingHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                android:textStyle="bold"/>
+
+            <com.github.mikephil.charting.charts.PieChart
+                android:id="@+id/pie_chart_monthly_breakdown"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:layout_margin="16dp" />
+
+        </LinearLayout>
+    </ScrollView>
 
     <ProgressBar
         android:id="@+id/progress_bar_monthly"
