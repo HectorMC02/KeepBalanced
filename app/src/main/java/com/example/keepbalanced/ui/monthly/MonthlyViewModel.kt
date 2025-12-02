@@ -16,7 +16,8 @@ import java.util.Locale
 data class MonthlyChartData(
     val incomeEntries: List<BarEntry>,
     val expenseEntries: List<BarEntry>,
-    val daysInMonth: Int
+    val weekTitle: String, // Ej: "Semana 1 (1 - 7 Nov)"
+    val xLabels: List<String> // Ej: ["L", "M", "X", "J", "V", "S", "D"]
 )
 
 @Suppress("DEPRECATION")
@@ -26,19 +27,16 @@ class MonthlyViewModel : ViewModel() {
     private val auth = Firebase.auth
     private val userId = auth.currentUser?.uid ?: ""
 
-    // Datos Gráfico Barras
     private val _chartData = MutableLiveData<MonthlyChartData>()
     val chartData: LiveData<MonthlyChartData> = _chartData
 
-    // Datos Gráfico Circular (Gastos del mes)
     private val _monthlyExpensesMap = MutableLiveData<Map<String, Double>>()
     val monthlyExpensesMap: LiveData<Map<String, Double>> = _monthlyExpensesMap
 
-    // Totales Numéricos
-    private val _monthlyIncome = MutableLiveData(0.0)
+    private val _monthlyIncome = MutableLiveData<Double>(0.0)
     val monthlyIncome: LiveData<Double> = _monthlyIncome
 
-    private val _monthlyExpense = MutableLiveData(0.0)
+    private val _monthlyExpense = MutableLiveData<Double>(0.0)
     val monthlyExpense: LiveData<Double> = _monthlyExpense
 
     private val _currentMonthText = MutableLiveData<String>()
@@ -49,20 +47,56 @@ class MonthlyViewModel : ViewModel() {
 
     private var selectedDate = Calendar.getInstance()
 
+    // --- NUEVO: Control de Semana (0 a 5) ---
+    private var currentWeekIndex = 0
+    private var currentMonthTransactions: List<Transaction> = emptyList()
+
     init {
         if (userId.isNotEmpty()) {
+            // Calculamos la semana actual al iniciar para no empezar siempre en la 1
+            val today = Calendar.getInstance()
+            currentWeekIndex = today.get(Calendar.WEEK_OF_MONTH) - 1
             loadDataForSelectedMonth()
         }
     }
 
     fun previousMonth() {
         selectedDate.add(Calendar.MONTH, -1)
+        currentWeekIndex = 0 // Al cambiar de mes, reseteamos a semana 1
         loadDataForSelectedMonth()
     }
 
     fun nextMonth() {
         selectedDate.add(Calendar.MONTH, 1)
+        currentWeekIndex = 0
         loadDataForSelectedMonth()
+    }
+
+    // --- NUEVO: Navegación Semanal ---
+    fun nextWeek() {
+        val daysInMonth = selectedDate.getActualMaximum(Calendar.DAY_OF_MONTH)
+
+        val cal = selectedDate.clone() as Calendar
+        cal.set(Calendar.DAY_OF_MONTH, 1)
+        var dayOfWeekOffset = cal.get(Calendar.DAY_OF_WEEK) - 2
+        if (dayOfWeekOffset < 0) dayOfWeekOffset = 6
+
+        val nextWeekIndexPosible = currentWeekIndex + 1
+        val startGridIndexNextWeek = nextWeekIndexPosible * 7
+
+        val firstDayOfNextWeek = startGridIndexNextWeek - dayOfWeekOffset + 1
+
+        if (firstDayOfNextWeek <= daysInMonth) {
+            currentWeekIndex++
+            recalculateWeekData()
+        }
+    }
+
+    fun previousWeek() {
+        if (currentWeekIndex > 0) {
+            currentWeekIndex--
+            recalculateWeekData()
+        }
     }
 
     private fun loadDataForSelectedMonth() {
@@ -74,7 +108,6 @@ class MonthlyViewModel : ViewModel() {
 
         val monthIndex = selectedDate.get(Calendar.MONTH) + 1
         val year = selectedDate.get(Calendar.YEAR)
-        val daysInMonth = selectedDate.getActualMaximum(Calendar.DAY_OF_MONTH)
 
         db.collection("transacciones")
             .whereEqualTo("usuarioId", userId)
@@ -84,39 +117,88 @@ class MonthlyViewModel : ViewModel() {
             .addSnapshotListener { snapshots, _ ->
                 _isLoading.value = false
                 if (snapshots != null) {
-                    val transactions = snapshots.toObjects(Transaction::class.java)
+                    currentMonthTransactions = snapshots.toObjects(Transaction::class.java)
 
-                    processBarChartData(transactions, daysInMonth)
-                    processTotalsAndPie(transactions)
+                    // Procesamos totales globales del mes
+                    processTotalsAndPie(currentMonthTransactions)
+
+                    // Procesamos el gráfico para la semana actual
+                    recalculateWeekData()
                 }
             }
     }
 
-    private fun processBarChartData(transactions: List<Transaction>, daysInMonth: Int) {
+    /**
+     * Esta función toma todas las transacciones del mes y extrae solo las de la semana seleccionada.
+     */
+    private fun recalculateWeekData() {
         val incomeEntries = ArrayList<BarEntry>()
         val expenseEntries = ArrayList<BarEntry>()
+        val xLabels = ArrayList<String>()
 
-        val grouped = transactions.groupBy {
-            val cal = Calendar.getInstance()
-            cal.time = it.fecha!!
-            cal.get(Calendar.DAY_OF_MONTH)
-        }
+        val cal = selectedDate.clone() as Calendar
+        cal.set(Calendar.DAY_OF_MONTH, 1)
 
-        for (day in 1..daysInMonth) {
-            var dailyIncome = 0.0
-            var dailyExpense = 0.0
+        var dayOfWeekOffset = cal.get(Calendar.DAY_OF_WEEK) - 2
+        if (dayOfWeekOffset < 0) dayOfWeekOffset = 6
 
-            val dayTransactions = grouped[day] ?: emptyList()
-            for (t in dayTransactions) {
-                if (t.tipo == "ingreso") dailyIncome += t.monto
-                else if (t.tipo == "gasto") dailyExpense += t.monto
+        val startGridIndex = currentWeekIndex * 7
+        val daysInMonth = selectedDate.getActualMaximum(Calendar.DAY_OF_MONTH)
+
+        var firstRealDayOfWeek = -1
+        var lastRealDayOfWeek = -1
+
+        for (i in 0..6) {
+            val gridIndex = startGridIndex + i
+            val dayOfMonth = gridIndex - dayOfWeekOffset + 1
+
+            if (dayOfMonth in 1..daysInMonth) {
+                if (firstRealDayOfWeek == -1) firstRealDayOfWeek = dayOfMonth
+                lastRealDayOfWeek = dayOfMonth
+
+                // Filtramos las transacciones de ESTE día
+                val dayTransactions = currentMonthTransactions.filter {
+                    val tCal = Calendar.getInstance()
+                    tCal.time = it.fecha!!
+                    tCal.get(Calendar.DAY_OF_MONTH) == dayOfMonth
+                }
+
+                var dailyIncome = 0.0
+                var dailyExpense = 0.0
+
+                // --- CAMBIO: SEPARAMOS LAS LISTAS ---
+                val incomeList = ArrayList<Transaction>()
+                val expenseList = ArrayList<Transaction>()
+
+                for (t in dayTransactions) {
+                    if (t.tipo == "ingreso") {
+                        dailyIncome += t.monto
+                        incomeList.add(t)
+                    } else if (t.tipo == "gasto") {
+                        dailyExpense += t.monto
+                        expenseList.add(t)
+                    }
+                }
+
+                // --- CAMBIO: PASAMOS LA LISTA COMO 3er PARÁMETRO (Data) ---
+                incomeEntries.add(BarEntry(i.toFloat(), dailyIncome.toFloat(), incomeList))
+                expenseEntries.add(BarEntry(i.toFloat(), dailyExpense.toFloat(), expenseList))
+
+                xLabels.add(dayOfMonth.toString())
+            } else {
+                incomeEntries.add(BarEntry(i.toFloat(), 0f))
+                expenseEntries.add(BarEntry(i.toFloat(), 0f))
+                xLabels.add("-")
             }
-
-            incomeEntries.add(BarEntry(day.toFloat(), dailyIncome.toFloat()))
-            expenseEntries.add(BarEntry(day.toFloat(), dailyExpense.toFloat()))
         }
 
-        _chartData.value = MonthlyChartData(incomeEntries, expenseEntries, daysInMonth)
+        val tituloSemana = if (firstRealDayOfWeek != -1) {
+            "Semana ${currentWeekIndex + 1} ($firstRealDayOfWeek - $lastRealDayOfWeek)"
+        } else {
+            "Semana ${currentWeekIndex + 1}"
+        }
+
+        _chartData.value = MonthlyChartData(incomeEntries, expenseEntries, tituloSemana, xLabels)
     }
 
     private fun processTotalsAndPie(transactions: List<Transaction>) {
@@ -129,7 +211,6 @@ class MonthlyViewModel : ViewModel() {
                 totalIng += t.monto
             } else if (t.tipo == "gasto") {
                 totalGast += t.monto
-                // Agrupar para el gráfico circular
                 val cat = t.categoria.ifEmpty { "Otros" }
                 gastosMap[cat] = gastosMap.getOrDefault(cat, 0.0) + t.monto
             }

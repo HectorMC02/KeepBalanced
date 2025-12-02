@@ -36,7 +36,7 @@
                 tools:text="15.400,00 €"
                 android:textAppearance="@style/TextAppearance.Material3.DisplayLarge"
                 android:textStyle="bold"
-                android:textColor="@color/design_default_color_primary"
+                android:textColor="?android:attr/textColorPrimary"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_investment_title" />
 

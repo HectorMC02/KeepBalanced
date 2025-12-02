@@ -25,7 +25,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="Balance Actual"
+                android:text="@string/balance_actual"
                 android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -36,7 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="0,00 €"
+                android:text="@string/_0_00"
                 android:textAppearance="@style/TextAppearance.Material3.DisplayMedium"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -62,8 +62,8 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ingresos" />
-                    <TextView android:id="@+id/tv_ingresos_total" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0€"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ingresos" />
+                    <TextView android:id="@+id/tv_ingresos_total" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/_0"/>
                 </LinearLayout>
                 <View android:layout_width="1dp" android:layout_height="match_parent" android:background="@android:color/darker_gray" android:alpha="0.2" />
                 <LinearLayout
@@ -72,8 +72,8 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Gastos" />
-                    <TextView android:id="@+id/tv_gastos_total" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0€"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/gastos" />
+                    <TextView android:id="@+id/tv_gastos_total" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/_0"/>
                 </LinearLayout>
             </LinearLayout>
 
@@ -81,7 +81,7 @@
                 android:id="@+id/tv_recent_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Últimos movimientos"
+                android:text="@string/ltimos_movimientos"
                 android:textStyle="bold"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="24dp"
@@ -101,8 +101,8 @@
                 android:id="@+id/tv_ver_mas"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Ver más movimientos"
-                android:textColor="@color/design_default_color_primary"
+                android:text="@string/ver_m_s_movimientos"
+                android:textColor="?android:attr/textColorPrimary"
                 android:gravity="center"
                 android:padding="12dp"
                 android:background="?android:attr/selectableItemBackground"
@@ -159,6 +159,7 @@
                     android:id="@+id/btn_close_history"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
+                    android:contentDescription="@string/cerrar_historial"
                     android:src="@android:drawable/ic_menu_close_clear_cancel"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     app:tint="@android:color/darker_gray"/>
@@ -168,7 +169,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Historial Completo"
+                    android:text="@string/historial_completo"
                     android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium"
                     android:textStyle="bold"
                     android:layout_marginStart="8dp"/>
@@ -179,8 +180,8 @@
                     android:layout_height="48dp"
                     android:src="@android:drawable/ic_menu_sort_by_size"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    app:tint="@color/design_default_color_primary"
-                    android:contentDescription="Filtrar"/>
+                    app:tint="?android:attr/textColorPrimary"
+                    android:contentDescription="@string/filtrar"/>
             </LinearLayout>
 
             <com.google.android.material.chip.ChipGroup
@@ -196,7 +197,7 @@
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Todos"
+                    android:text="@string/todos"
                     android:checked="true" />
 
                 <com.google.android.material.chip.Chip
@@ -204,14 +205,14 @@
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Gastos" />
+                    android:text="@string/gastos" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_income"
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ingresos" />
+                    android:text="@string/ingresos" />
             </com.google.android.material.chip.ChipGroup>
 
             <androidx.recyclerview.widget.RecyclerView
@@ -225,7 +226,7 @@
                 android:id="@+id/btn_load_more"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Cargar 10 más"
+                android:text="@string/cargar_10_m_s"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="32dp"/>
@@ -238,6 +239,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:contentDescription="@string/boton_flotante"
         android:src="@android:drawable/ic_input_add"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

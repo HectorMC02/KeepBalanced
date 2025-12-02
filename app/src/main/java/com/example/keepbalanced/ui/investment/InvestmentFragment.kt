@@ -276,7 +276,7 @@ class InvestmentFragment : Fragment() {
         viewModel.chartData.observe(viewLifecycleOwner) { data ->
             currentData = data
             // Configurar el marcador con la lógica de posición corregida
-            val marker = CustomMarkerView(requireContext(), R.layout.custom_marker_view)
+            val marker = InvestmentMarkerView(requireContext(), R.layout.custom_marker_view)
             marker.chartView = lineChart
             lineChart.marker = marker
 

@@ -21,8 +21,8 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/boton_previo"
-            android:src="@android:drawable/ic_media_previous"
-            app:tint="@color/design_default_color_primary" />
+            android:src="@drawable/ic_chevron_left"
+            app:tint="?android:attr/textColorPrimary" />
 
         <TextView
             android:id="@+id/tv_current_month"
@@ -32,7 +32,8 @@
             android:gravity="center"
             android:text="@string/noviembre_2025"
             android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary" />
 
         <ImageButton
             android:id="@+id/btn_next_month"
@@ -40,8 +41,8 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/bot_n_siguiente"
-            android:src="@android:drawable/ic_media_next"
-            app:tint="@color/design_default_color_primary" />
+            android:src="@drawable/ic_chevron_right"
+            app:tint="?android:attr/textColorPrimary" />
     </LinearLayout>
 
     <ScrollView
@@ -74,7 +75,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/ingresos_mensuales"
-                        android:textSize="12sp"/>
+                        android:textSize="12sp"
+                        android:textColor="?android:attr/textColorPrimary"/>
                     <TextView
                         android:id="@+id/tv_monthly_income"
                         android:layout_width="wrap_content"
@@ -94,7 +96,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/gastos_mensuales"
-                        android:textSize="12sp"/>
+                        android:textSize="12sp"
+                        android:textColor="?android:attr/textColorPrimary"/>
                     <TextView
                         android:id="@+id/tv_monthly_expense"
                         android:layout_width="wrap_content"
@@ -110,7 +113,8 @@
                 android:layout_height="wrap_content"
                 android:text="@string/evoluci_n_diaria"
                 android:paddingHorizontal="16dp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorPrimary"/>
 
             <com.github.mikephil.charting.charts.BarChart
                 android:id="@+id/bar_chart_monthly"
@@ -118,13 +122,50 @@
                 android:layout_height="250dp"
                 android:layout_margin="16dp" />
 
+            <LinearLayout
+                android:id="@+id/layout_week_selector"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="32dp"
+                android:layout_marginBottom="16dp"> <ImageButton
+                android:id="@+id/btn_prev_week"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/boton_previo"
+                android:src="@drawable/ic_chevron_left"
+                app:tint="?android:attr/textColorPrimary" />
+
+                <TextView
+                    android:id="@+id/tv_current_week"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/semana_1_1_7"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorPrimary" />
+
+                <ImageButton
+                    android:id="@+id/btn_next_week"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/bot_n_siguiente"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="?android:attr/textColorPrimary" />
+            </LinearLayout>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/desglose_de_gastos"
                 android:paddingHorizontal="16dp"
-                android:layout_marginTop="16dp"
-                android:textStyle="bold"/>
+                android:layout_marginTop="8dp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorPrimary"/>
 
             <com.github.mikephil.charting.charts.PieChart
                 android:id="@+id/pie_chart_monthly_breakdown"

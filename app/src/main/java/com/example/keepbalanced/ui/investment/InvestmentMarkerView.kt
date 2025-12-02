@@ -18,7 +18,7 @@ import java.util.Locale
 
 @Suppress("DEPRECATION")
 @SuppressLint("ViewConstructor")
-class CustomMarkerView(context: Context, layoutResource: Int) : MarkerView(context, layoutResource) {
+class InvestmentMarkerView(context: Context, layoutResource: Int) : MarkerView(context, layoutResource) {
 
     private val tvContent: TextView = findViewById(R.id.tv_marker_amount)
     private val tvDate: TextView = findViewById(R.id.tv_marker_date)

@@ -24,6 +24,7 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
 import java.text.NumberFormat
@@ -34,16 +35,21 @@ class MonthlyFragment : Fragment() {
 
     private lateinit var viewModel: MonthlyViewModel
 
+    // Mes
     private lateinit var tvCurrentMonth: TextView
     private lateinit var btnPrev: ImageButton
     private lateinit var btnNext: ImageButton
-    private lateinit var barChart: BarChart
-    private lateinit var progressBar: ProgressBar
 
-    // Vistas Nuevas
+    // Semana (NUEVO)
+    private lateinit var tvCurrentWeek: TextView
+    private lateinit var btnPrevWeek: ImageButton
+    private lateinit var btnNextWeek: ImageButton
+
+    private lateinit var barChart: BarChart
+    private lateinit var pieChart: PieChart
+    private lateinit var progressBar: ProgressBar
     private lateinit var tvMonthlyIncome: TextView
     private lateinit var tvMonthlyExpense: TextView
-    private lateinit var pieChart: PieChart
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_monthly, container, false)
@@ -57,6 +63,11 @@ class MonthlyFragment : Fragment() {
         tvCurrentMonth = view.findViewById(R.id.tv_current_month)
         btnPrev = view.findViewById(R.id.btn_prev_month)
         btnNext = view.findViewById(R.id.btn_next_month)
+
+        tvCurrentWeek = view.findViewById(R.id.tv_current_week)
+        btnPrevWeek = view.findViewById(R.id.btn_prev_week)
+        btnNextWeek = view.findViewById(R.id.btn_next_week)
+
         barChart = view.findViewById(R.id.bar_chart_monthly)
         progressBar = view.findViewById(R.id.progress_bar_monthly)
 
@@ -80,31 +91,33 @@ class MonthlyFragment : Fragment() {
         return typedValue.data
     }
 
-    // --- ESTILOS DE GRÁFICOS ---
-
     private fun setupBarChartStyle() {
         val colorTexto = getThemeColor(android.R.attr.textColorPrimary)
+
         barChart.description.isEnabled = false
         barChart.setPinchZoom(false)
         barChart.setScaleEnabled(false)
         barChart.setDrawBarShadow(false)
         barChart.setDrawGridBackground(false)
         barChart.legend.textColor = colorTexto
+        barChart.axisRight.isEnabled = false
+
+        val marker = MonthlyMarkerView(requireContext(), R.layout.custom_marker_monthly)
+        marker.chartView = barChart
+        barChart.marker = marker
 
         val xAxis = barChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.setDrawGridLines(false)
         xAxis.textColor = colorTexto
         xAxis.granularity = 1f
-        xAxis.labelCount = 6
+        xAxis.labelCount = 7 // 7 días de la semana
         xAxis.setCenterAxisLabels(true)
-        xAxis.valueFormatter = object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String = value.toInt().toString()
-        }
 
         val leftAxis = barChart.axisLeft
         leftAxis.textColor = colorTexto
         leftAxis.axisMinimum = 0f
+
         barChart.axisRight.isEnabled = false
     }
 
@@ -130,23 +143,25 @@ class MonthlyFragment : Fragment() {
     private fun setupListeners() {
         btnPrev.setOnClickListener { viewModel.previousMonth() }
         btnNext.setOnClickListener { viewModel.nextMonth() }
+
+        // Listeners Semana
+        btnPrevWeek.setOnClickListener { viewModel.previousWeek() }
+        btnNextWeek.setOnClickListener { viewModel.nextWeek() }
     }
 
     private fun setupObservers() {
         viewModel.currentMonthText.observe(viewLifecycleOwner) { tvCurrentMonth.text = it }
         viewModel.isLoading.observe(viewLifecycleOwner) { progressBar.isVisible = it }
 
-        // Datos Gráfico Barras
         viewModel.chartData.observe(viewLifecycleOwner) { data ->
             updateBarChart(data)
+            tvCurrentWeek.text = data.weekTitle // Actualizar título de semana
         }
 
-        // Datos Textos
         val format = NumberFormat.getCurrencyInstance(Locale("es", "ES"))
         viewModel.monthlyIncome.observe(viewLifecycleOwner) { tvMonthlyIncome.text = format.format(it) }
         viewModel.monthlyExpense.observe(viewLifecycleOwner) { tvMonthlyExpense.text = format.format(it) }
 
-        // Datos Gráfico Circular
         viewModel.monthlyExpensesMap.observe(viewLifecycleOwner) { mapa ->
             updatePieChart(mapa)
         }
@@ -154,15 +169,19 @@ class MonthlyFragment : Fragment() {
 
     private fun updateBarChart(data: MonthlyChartData) {
         val colorTexto = getThemeColor(android.R.attr.textColorPrimary)
+
+        // 1. Asignar etiquetas X (Días del mes)
+        barChart.xAxis.valueFormatter = IndexAxisValueFormatter(data.xLabels)
+
         val setIngresos = BarDataSet(data.incomeEntries, "Ingresos")
         setIngresos.color = ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark)
         setIngresos.valueTextColor = colorTexto
-        setIngresos.valueTextSize = 9f
+        setIngresos.valueTextSize = 10f
 
         val setGastos = BarDataSet(data.expenseEntries, "Gastos")
         setGastos.color = ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
         setGastos.valueTextColor = colorTexto
-        setGastos.valueTextSize = 9f
+        setGastos.valueTextSize = 10f
 
         val groupSpace = 0.08f
         val barSpace = 0.03f
@@ -172,15 +191,21 @@ class MonthlyFragment : Fragment() {
         barData.barWidth = barWidth
         barData.setValueFormatter(object : ValueFormatter() {
             @SuppressLint("DefaultLocale")
-            override fun getFormattedValue(value: Float): String = if (value > 0) String.format("%.0f", value) else ""
+            override fun getFormattedValue(value: Float): String {
+                return if (value > 0) String.format("%.0f", value) else ""
+            }
         })
 
         barChart.data = barData
-        barChart.xAxis.axisMinimum = 1f
-        barChart.xAxis.axisMaximum = data.daysInMonth.toFloat() + 1f
-        barChart.groupBars(1f, groupSpace, barSpace)
+
+        // IMPORTANTE: Ahora el rango es fijo de 0 a 7 (una semana)
+        barChart.xAxis.axisMinimum = 0f
+        barChart.xAxis.axisMaximum = 7f
+
+        barChart.groupBars(0f, groupSpace, barSpace) // Empezar en 0
+
         barChart.invalidate()
-        barChart.animateY(1000)
+        barChart.animateY(500) // Animación más rápida para cambiar de semana
     }
 
     private fun updatePieChart(mapa: Map<String, Double>) {

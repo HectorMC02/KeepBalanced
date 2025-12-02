@@ -24,4 +24,18 @@
     <string name="gastos_mensuales">Gastos Mensuales</string>
     <string name="evoluci_n_diaria">Evolución Diaria</string>
     <string name="desglose_de_gastos">Desglose de Gastos</string>
+    <string name="ver_m_s_movimientos">Ver más movimientos</string>
+    <string name="historial_completo">Historial Completo</string>
+    <string name="filtrar">Filtrar</string>
+    <string name="todos">Todos</string>
+    <string name="gastos">Gastos</string>
+    <string name="ingresos">Ingresos</string>
+    <string name="cargar_10_m_s">Cargar 10 más</string>
+    <string name="boton_flotante">Boton flotante</string>
+    <string name="cerrar_historial">Cerrar historial</string>
+    <string name="ltimos_movimientos">Últimos movimientos</string>
+    <string name="_0">0€</string>
+    <string name="balance_actual">Balance Actual</string>
+    <string name="semana_1_1_7">Semana 1 (1–7)</string>
+    <string name="cargando">Cargando…</string>
 </resources>
