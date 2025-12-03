@@ -3,7 +3,7 @@ package com.example.keepbalanced.ui.investment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.keepbalanced.model.PortfolioDistribution // Asegúrate de tener esta clase creada o defínela abajo
+import com.example.keepbalanced.model.PortfolioDistribution
 import com.example.keepbalanced.model.Transaction
 import com.github.mikephil.charting.data.Entry
 import com.google.firebase.Firebase
@@ -29,15 +29,12 @@ class InvestmentViewModel : ViewModel() {
     private val auth = Firebase.auth
     private val userId = auth.currentUser?.uid ?: ""
 
-    // --- LIVE DATA PARA GRÁFICO DE LÍNEA ---
     private val _chartData = MutableLiveData<InvestmentChartData>()
     val chartData: LiveData<InvestmentChartData> = _chartData
 
     private val _totalInvertido = MutableLiveData<Double>(0.0)
     val totalInvertido: LiveData<Double> = _totalInvertido
 
-    // --- LIVE DATA PARA GRÁFICO CIRCULAR (DISTRIBUCIÓN) ---
-    // Esta es la variable que te faltaba
     private val _portfolioDistribution = MutableLiveData<PortfolioDistribution>()
     val portfolioDistribution: LiveData<PortfolioDistribution> = _portfolioDistribution
 
@@ -70,70 +67,56 @@ class InvestmentViewModel : ViewModel() {
                 if (snapshots != null) {
                     val rawList = snapshots.toObjects(Transaction::class.java)
                     allTransactions = rawList.sortedBy { it.fecha }
-
-                    // 1. Calcular gráfico de línea (con filtros de tiempo)
                     filterDataByRange(TimeRange.ALL)
-
-                    // 2. Calcular gráfico circular (siempre histórico completo)
-                    calculateCurrentDistribution()
                 }
             }
     }
 
-    /**
-     * Calcula los totales históricos para el gráfico de tarta (Meta vs Realidad).
-     */
-    private fun calculateCurrentDistribution() {
-        var sumFija = 0.0
-        var sumVariable = 0.0
-        var sumOro = 0.0
-
-        for (t in allTransactions) {
-            val sub = t.subcategoria ?: ""
-            if (sub.contains("Fija", true)) sumFija += t.monto
-            if (sub.contains("Variable", true)) sumVariable += t.monto
-            if (sub.contains("Oro", true)) sumOro += t.monto
-        }
-
-        val total = sumFija + sumVariable + sumOro
-
-        _portfolioDistribution.value = PortfolioDistribution(
-            totalFija = sumFija,
-            totalVariable = sumVariable,
-            totalOro = sumOro,
-            totalGeneral = total
-        )
-    }
-
-    /**
-     * Lógica del gráfico de línea (muestreo diario).
-     */
     fun filterDataByRange(range: TimeRange) {
         if (allTransactions.isEmpty()) {
-            // Si no hay datos, enviamos vacío para limpiar gráfica
             _chartData.value = InvestmentChartData(emptyList(), emptyList(), emptyList(), emptyList())
+            _portfolioDistribution.value = PortfolioDistribution(0.0,0.0,0.0,0.0)
             return
         }
 
         val cal = Calendar.getInstance()
+        // Fecha Fin: Hoy
         val endDate = truncateTime(cal.time)
 
+        // --- LÓGICA DE FECHAS CAMBIADA A MESES NATURALES ---
         val startDate: Long = when (range) {
-            TimeRange.ONE_MONTH -> { cal.add(Calendar.MONTH, -1); truncateTime(cal.time) }
-            TimeRange.SIX_MONTHS -> { cal.add(Calendar.MONTH, -6); truncateTime(cal.time) }
-            TimeRange.ONE_YEAR -> { cal.add(Calendar.YEAR, -1); truncateTime(cal.time) }
+            TimeRange.ONE_MONTH -> {
+                // Desde el día 1 del mes ACTUAL
+                cal.set(Calendar.DAY_OF_MONTH, 1)
+                truncateTime(cal.time)
+            }
+            TimeRange.SIX_MONTHS -> {
+                // Desde el día 1 de hace 5 meses (Total 6 meses inc. el actual)
+                cal.add(Calendar.MONTH, -5)
+                cal.set(Calendar.DAY_OF_MONTH, 1)
+                truncateTime(cal.time)
+            }
+            TimeRange.ONE_YEAR -> {
+                // Desde el día 1 de hace 11 meses (Total 1 año inc. el actual)
+                cal.add(Calendar.MONTH, -11)
+                cal.set(Calendar.DAY_OF_MONTH, 1)
+                truncateTime(cal.time)
+            }
             TimeRange.ALL -> {
                 val primeraFecha = allTransactions.firstOrNull()?.fecha
                 if (primeraFecha != null) truncateTime(primeraFecha) else endDate
             }
         }
 
+        // Variables acumuladores
         var sumTotal = 0.0
         var sumFija = 0.0
         var sumVariable = 0.0
         var sumOro = 0.0
 
-        // 1. Acumulado Previo
+        // 1. ACUMULADO PREVIO (Lo que tenías ANTES de este periodo)
+        // Esto sirve para que la línea empiece en la altura correcta,
+        // pero NO se cuenta para el gráfico circular (que solo quiere el flujo del periodo).
         val transaccionesPrevias = allTransactions.filter { it.fecha != null && truncateTime(it.fecha) < startDate }
         for (t in transaccionesPrevias) {
             val sub = t.subcategoria ?: ""
@@ -143,8 +126,10 @@ class InvestmentViewModel : ViewModel() {
             if (sub.contains("Oro", true)) sumOro += t.monto
         }
 
-        // 2. Agrupar por día las visibles
+        // 2. TRANSACCIONES DEL PERIODO (Lo que se mostrará en el circular y moverá la línea)
         val transaccionesEnRango = allTransactions.filter { it.fecha != null && truncateTime(it.fecha) >= startDate }
+
+        // Preparamos datos para gráfico de línea (agrupado por días)
         val groupedByDay = transaccionesEnRango.groupBy { truncateTime(it.fecha!!) }
 
         val entriesTotal = ArrayList<Entry>()
@@ -152,7 +137,7 @@ class InvestmentViewModel : ViewModel() {
         val entriesVariable = ArrayList<Entry>()
         val entriesOro = ArrayList<Entry>()
 
-        // 3. Bucle diario
+        // 3. BUCLE DIARIO PARA LA LÍNEA
         cal.timeInMillis = startDate
         while (cal.timeInMillis <= endDate) {
             val currentDayTimestamp = cal.timeInMillis
@@ -169,7 +154,6 @@ class InvestmentViewModel : ViewModel() {
             }
 
             val xValue = currentDayTimestamp.toFloat()
-
             entriesTotal.add(Entry(xValue, sumTotal.toFloat()))
             if (sumFija > 0) entriesFija.add(Entry(xValue, sumFija.toFloat()))
             if (sumVariable > 0) entriesVariable.add(Entry(xValue, sumVariable.toFloat()))
@@ -179,9 +163,33 @@ class InvestmentViewModel : ViewModel() {
         }
 
         _totalInvertido.value = sumTotal
+        _chartData.value = InvestmentChartData(entriesTotal, entriesFija, entriesVariable, entriesOro)
 
-        val data = InvestmentChartData(entriesTotal, entriesFija, entriesVariable, entriesOro)
-        _chartData.value = data
+        // =================================================================
+        // 4. CÁLCULO DEL GRÁFICO CIRCULAR (SOLO FLUJO DEL PERIODO)
+        // =================================================================
+        // Aquí sumamos SOLAMENTE las transacciones que han ocurrido dentro del rango de fechas.
+        // Ignoramos el 'sumFija' acumulado arriba porque ese incluye el pasado.
+
+        var pieFija = 0.0
+        var pieVariable = 0.0
+        var pieOro = 0.0
+
+        for (t in transaccionesEnRango) {
+            val sub = t.subcategoria ?: ""
+            if (sub.contains("Fija", true)) pieFija += t.monto
+            if (sub.contains("Variable", true)) pieVariable += t.monto
+            if (sub.contains("Oro", true)) pieOro += t.monto
+        }
+
+        val pieTotal = pieFija + pieVariable + pieOro
+
+        _portfolioDistribution.value = PortfolioDistribution(
+            totalFija = pieFija,
+            totalVariable = pieVariable,
+            totalOro = pieOro,
+            totalGeneral = pieTotal
+        )
     }
 
     private fun truncateTime(date: Date): Long {

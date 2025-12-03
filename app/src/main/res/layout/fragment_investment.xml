@@ -172,6 +172,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
                 android:layout_marginTop="16dp"
+                android:clipChildren="false"
+                android:clipToPadding="false"
                 app:layout_constraintTop_toBottomOf="@id/tv_portfolio_title"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
@@ -186,8 +188,8 @@
                     android:id="@+id/pie_chart_target"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_margin="38dp" />
-
+                    android:layout_margin="35dp"
+                    android:alpha="0.7" />
             </FrameLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
